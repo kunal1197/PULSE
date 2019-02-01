@@ -280,6 +280,14 @@ class Show(AST):
     def __init__(self, expr):
         self.expr = expr
 
+class For(AST):
+    def __init__(self, iterator, begin, end, increment, compound_statement):
+        self.iterator = iterator
+        self.begin = begin
+        self.end = end
+        self.increment = increment
+        self.compound_statement = compound_statement
+
 class Parser(object):
     def __init__(self, lexer):
         self.lexer = lexer
@@ -379,6 +387,50 @@ class Parser(object):
         node = Show(exp)
 
         return node
+
+    def for(self):
+        """for: FOR VAR ID IN (VAL)? COMMA VAL COMMA (VAL)? COLON INDENT (compound_statement)+"""
+        self.eat("FOR")
+        self.eat("VAR")
+        iterator = self.current_token
+        self.eat(ID)
+        self.eat("IN")
+        token = self.current_token
+        begin_empty = False
+        begin = 0
+        if token.type == COMMA:
+            begin = Token(INTEGER_CONST, "0")
+            self.eat(COMMA)
+            begin_empty = True
+        elif token.type == INTEGER_CONST:
+            begin = self.current_token
+            self.eat(INTEGER_CONST)
+        if(!begin_empty):
+            self.eat(COMMA)
+        end = self.current_token
+        self.eat(INTEGER_CONST)
+        self.eat(COMMA)
+        token = self.current_token
+        increment_empty = False
+        increment = 0
+        if token.type == COLON:
+            increment = Token(INTEGER_CONST, "1")
+            self.eat(COLON)
+            increment_empty = True
+        elif token.type == INTEGER_CONST:
+            increment = self.current_token
+            self.eat(INTEGER_CONST)
+        if(!increment_empty):
+            self.eat(COLON)
+        self.eat(INDENT)
+        compound_statement = self.compound_statement()
+        self.eat(UNINDENT)
+
+        node = For(iterator, begin, end, increment, compound_statement)
+
+        return node
+
+
 
 import sys
 

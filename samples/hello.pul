@@ -1,5 +1,2 @@
-var a = 10
-val b = 20
-show a
-if a == 10:
-  show 10
+for var in ,10,:
+  show var
