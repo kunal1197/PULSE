@@ -23,6 +23,7 @@ LPAREN = 'LPAREN'
 RPAREN = 'RPAREN'
 ID = 'ID'
 ASSIGN = 'ASSIGN'
+EQUAL = 'EQUAL'
 VAR = 'VAR'
 VAL = 'VAL'
 COLON = 'COLON'
@@ -172,6 +173,10 @@ class Lexer(object):
                 self.advance()
                 return Token(ASSIGN, '=')
 
+            if self.current_char == '=' and self.peek() == '=':
+                self.advance()
+                return Token(ASSIGN, '==')
+
             if self.current_char == ':':
                 self.advance()
                 return Token(COLON, ':')
@@ -318,19 +323,19 @@ class Parser(object):
         return node
 
     def compound_statement():
-        """compound_statement: FOR | WHILE | DOWHILE | FUN | ID | SWITCH"""
-        if self.current_token.type == "FOR":
-            node = self.for()
-        elif self.current_token.type == "WHILE":
-            node = self.while()
-        elif self.current_token.type == "DOWHILE":
-            node = self.dowhile()
-        elif self.current_token.type == "FUN":
-            node = self.fun()
-        elif self.current_token.type == "IF":
-            node = self.if()
-        elif self.current_token.type == "SWITCH":
-            node = self.switch()
+        """compound_statement: FOR | WHILE | DOWHILE | FUN | IF | SWITCH"""
+        # if self.current_token.type == "FOR":
+        #     node = self.for()
+        # elif self.current_token.type == "WHILE":
+        #     node = self.while()
+        # elif self.current_token.type == "DOWHILE":
+        #     node = self.dowhile()
+        # elif self.current_token.type == "FUN":
+        #     node = self.fun()
+        # elif self.current_token.type == "IF":
+        #     node = self.if()
+        # elif self.current_token.type == "SWITCH":
+        #     node = self.switch()
 
     def id(self):
         """id: ID ASSIGN expr"""

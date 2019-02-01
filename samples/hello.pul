@@ -1,0 +1,5 @@
+var a = 10
+val b = 20
+show a
+if a == 10:
+  show 10
