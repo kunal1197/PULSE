@@ -288,6 +288,37 @@ class For(AST):
         self.increment = increment
         self.compound_statement = compound_statement
 
+class While(AST):
+    def __init__(self, expr, compound_statement):
+        self.expr = expr
+        self.compound_statement = compound_statement
+
+class Dowhile(AST):
+    def __init__(self, epxr, compound_statement):
+        self.expr = expr
+        self.compound_statement = compound_statement
+
+class While(AST):
+    def __init__(self, expr, consts, compound_statements):
+        self.expr = expr
+        self.consts = consts
+        self.compound_statements = compound_statements
+
+class If(AST):
+    def __init__(self, if_expr, if_compound_statement, elseif_exprs, elseif_compound_statments, else_expr, else_compound_statment):
+        self.if_expr = if_expr
+        self.if_compound_statement = if_compound_statement
+        self.elseif_exprs = elseif_exprs
+        self.elseif_compound_statments = elseif_compound_statments
+        self.else_expr = else_expr
+        self.else_compound_statment = else_compound_statment
+
+class Switch(AST):
+    def __init__(self, expr, consts, compound_statements):
+        self.expr = expr
+        self.consts = consts
+        self.compound_statements = compound_statements
+
 class Parser(object):
     def __init__(self, lexer):
         self.lexer = lexer
@@ -388,7 +419,7 @@ class Parser(object):
 
         return node
 
-    def for(self):
+    def FOR(self):
         """for: FOR VAR ID IN (VAL)? COMMA VAL COMMA (VAL)? COLON INDENT (compound_statement)+"""
         self.eat("FOR")
         self.eat("VAR")
@@ -430,6 +461,110 @@ class Parser(object):
 
         return node
 
+    def WHILE(self):
+        """while: WHILE expr COLON INDENT (compound_statement)+ UNINDENT"""
+        self.eat("WHILE")
+        expr = self.expr()
+        self.eat(COLON)
+        self.eat(INDENT)
+        compound_statement = self.compound_statement()
+        self.eat(UNINDENT)
+
+        node = While(expr, compound_statement)
+
+        return node
+
+    def dowhile(self):
+        """dowhile: DOWHILE expr COLON INDENT (compound_statement)+ UNINDENT"""
+        self.eat("DOWHILE")
+        expr = self.expr()
+        self.eat(COLON)
+        self.eat(INDENT)
+        compound_statement = self.compound_statement()
+        self.eat(UNINDENT)
+
+        node = Dowhile(expr, compound_statement)
+
+        return node
+
+    def IF(self):
+        self.eat("IF")
+        if_expr = self.expr()
+        self.eat(COLON)
+        self.eat(INDENT)
+        if_compound_statement = self.compound_statement()
+        self.eat(UNINDENT)
+
+        elseif_exprs = []
+        elseif_compound_statments = []
+
+        while self.current_token.type == "ELSEIF":
+            self.eat("ELSEIF")
+            elseif_exprs.append(self.expr())
+            self.eat(COLON)
+            self.eat(INDENT)
+            elseif_compound_statments.append(self.compound_statement())
+            self.eat(UNINDENT)
+
+        if(self.current_token.type == "ELSE"):
+            self.eat("ELSE")
+            else_expr = self.expr()
+            self.eat(COLON)
+            self.eat(INDENT)
+            elseif_compound_statment = self.compound_statement()
+            self.eat(UNINDENT)
+
+        node = If(if_expr, if_compound_statement, elseif_exprs, elseif_compound_statments, else_expr, elseif_compound_statment)
+
+        return node
+
+    def switch(self):
+        """switch: SWITCH expr COLON INDENT (CASE (INTEGER_CONST|FLOAT_CONST) COLON INDENT compound_statement BREAK? UNINDENT)+ UNINDENT"""
+        self.eat("SWITCH")
+        expr = self.expr()
+        self.eat(COLON)
+        self.eat(INDENT)
+
+        consts = []
+        compound_statements = []
+
+        i = 0
+        while self.current_token.type == "CASE":
+            self.eat(CASE)
+            consts.append(self.current_token)
+            if(const.type == INTEGER_CONST):
+                self.eat(INTEGER_CONST)
+            elif(const.type == FLOAT_CONST):
+                self.eat(FLOAT_CONST)
+
+            self.eat(COLON)
+            self.eat(INDENT)
+
+            compound_statements.append(self.compound_statement())
+
+            token = self.current_token
+
+            break_flag = False
+
+            if(self.current_token.type == "BREAK"):
+                self.eat(BREAK)
+                break_flag = True
+            elif(self.current_token.type == UNINDENT):
+                self.eat(UNINDENT)
+
+            if(!break_flag):
+                self.eat(UNINDENT)
+
+            i += 1
+
+        if(i == 0):
+            self.error()
+
+        self.eat(UNINDENT)
+
+        node = Switch(expr, consts, compound_statements)
+
+        return node
 
 
 import sys
