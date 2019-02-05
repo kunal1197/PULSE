@@ -31,8 +31,18 @@ COMMA = 'COMMA'
 EOF = 'EOF'
 INDENT = "INDENT"
 UNINDENT = "UNINDENT"
-
-
+AND = "AND"
+OR = "OR"
+NOT = "NOT"
+LESS = "LESS"
+LEQ = "LEQ"
+EQUAL = "EQUAL"
+NOTEQUAL = "NOTEQUAL"
+GREAT = "GREAT"
+GEQ = "GEQ"
+INC = "INC"
+DEC = "DEC"
+POWER = "POWER"
 BEGIN = 'BEGIN'
 END = 'END'
 
@@ -69,7 +79,9 @@ RESERVED_KEYWORDS = {
     'while': Token('WHILE', 'WHILE'),
     'dowhile': Token('DOWHILE', 'DOWHILE'),
     'fun': Token('FUNCTION', 'FUNCTION'),
-    'show': Token('SHOW', 'SHOW')
+    'show': Token('SHOW', 'SHOW'),
+    'BEGIN': Token('BEGIN', 'BEGIN'),
+    'END': Token('END', 'END'),
 }
 
 class Lexer(object):
@@ -169,9 +181,13 @@ class Lexer(object):
             if self.current_char.isdigit():
                 return self.number()
 
+            if self.current_char == "!" and self.peek() == "=":
+                self.advance()
+                return Token(NOTEQUAL, "!=")
+
             if self.current_char == '=' and self.peek() != '=':
                 self.advance()
-                return Token(ASSIGN, '=')
+                return Token(EQUAL, '==')
 
             if self.current_char == '=' and self.peek() == '=':
                 self.advance()
@@ -180,6 +196,10 @@ class Lexer(object):
             if self.current_char == ':':
                 self.advance()
                 return Token(COLON, ':')
+
+            if self.current_char == "$":
+                self.advance()
+                return Token(POWER, "$")
 
             if self.current_char == '+' and self.peek() != '+':
                 self.advance()
@@ -199,7 +219,7 @@ class Lexer(object):
 
             if self.current_char == '/' and self.peek() == '/':
                 self.advance()
-                return Token(INTEGER_DIV, '/')
+                return Token(INTEGER_DIV, '//')
 
             if self.current_char == '(':
                 self.advance()
@@ -212,6 +232,34 @@ class Lexer(object):
             if self.current_char == ',':
                 self.advance()
                 return Token(COMMA, ',')
+
+            if self.current_char == "<" and self.peek() != "=":
+                self.advance()
+                return Token(LESS, "<")
+
+            if self.current_char == "<" and self.peek() == "=":
+                self.advance()
+                return Token(LEQ, "<=")
+
+            if self.current_char == ">" and self.peek() != "=":
+                self.advance()
+                return Token(GREAT, ">")
+
+            if self.current_char == ">" and self.peek() == "=":
+                self.advance()
+                return Token(GEQ, ">=")
+
+            if self.current_char == "&" and self.peek() == "&":
+                self.advance()
+                return Token(AND, "&&")
+
+            if self.current_char == "|" and self.peek() == "|":
+                self.advance()
+                return Token(OR, "||")
+
+            if self.current_char == "!" and self.peek() != "=":
+                self.advance()
+                return Token(NOT, "!")
 
             # TODO: Implement indentation, increment, decrement
 
@@ -311,11 +359,16 @@ class Program(AST):
         )
 
 class Block(AST):
-    def __init__(self, statement):
-        self.statement = statement
+    def __init__(self, stype, single_line = None, compound_statement = None):
+        self.single_line = single_line
+        self.compound_statement = compound_statement
+        self.stype = stype
     def __str__(self):
-        return "Block({statement})".format(
-            statement = self.statement
+        return "Block({single_line}, {compound_statement}, {stype})".format(
+            single_statement = self.single_line,
+            compound_statement = self.compound_statement,
+            stype = self.stype,
+
         )
 
 class Show(AST):
@@ -323,7 +376,7 @@ class Show(AST):
         self.expr = expr
     def __str__(self):
         return "Show({expr})".format(
-            self.expr = expr
+            expr = self.expr
         )
 
 class For(AST):
@@ -404,15 +457,36 @@ class Switch(AST):
             compound_statements = self.compound_statements
         )
 
+class Fun(AST):
+    def __init__(self, func_name, var_types, var_names, compound_statement):
+        self.func_name = func_name
+        self.var_types = var_types
+        self.var_names = var_names
+        self.compound_statement = compound_statement
+    def __str__(self):
+        return "Fun({func_name}, {var_types}, {var_names}, {compound_statement})".format(
+            func_name = self.func_name,
+            var_types = self.var_types,
+            var_names = self.var_names,
+            compound_statement = self.compound_statement
+        )
+
 class Parser(object):
     def __init__(self, lexer):
         self.lexer = lexer
         self.current_token = self.lexer.get_next_token()
 
+    def error(self):
+        raise Exception("Invalid syntax!")
+
     def eat(self, token_type):
         if self.current_token.type == token_type:
+            print(token_type)
+            print(self.current_token.type)
             self.current_token = self.lexer.get_next_token()
         else:
+            print(token_type)
+            print(self.current_token.type)
             self.error()
 
     def program(self):
@@ -426,10 +500,10 @@ class Parser(object):
 
     def block(self):
         """block: single_line | compound_statement"""
-        if self.current_token.type == ID or self.current_token.type == VAL or self.current_token.type == VAL or self.current_token.type == SHOW:
-            node = Block(self.single_line())
+        if self.current_token.type == ID or self.current_token.type == VAL or self.current_token.type == VAL or self.current_token.type == "SHOW":
+            node = Block("single", self.single_line(), None)
         else:
-            node = Block(self.compound_statement())
+            node = Block("compound", None, self.compound_statement())
 
         return node
 
@@ -441,25 +515,25 @@ class Parser(object):
             node = self.var()
         elif self.current_token.type == VAL:
             node = self.val()
-        elif self.current_token.type == SHOW:
+        elif self.current_token.type == "SHOW":
             node = self.show()
 
         return node
 
     def compound_statement():
         """compound_statement: FOR | WHILE | DOWHILE | FUN | IF | SWITCH"""
-        # if self.current_token.type == "FOR":
-        #     node = self.for()
-        # elif self.current_token.type == "WHILE":
-        #     node = self.while()
-        # elif self.current_token.type == "DOWHILE":
-        #     node = self.dowhile()
-        # elif self.current_token.type == "FUN":
-        #     node = self.fun()
-        # elif self.current_token.type == "IF":
-        #     node = self.if()
-        # elif self.current_token.type == "SWITCH":
-        #     node = self.switch()
+        if self.current_token.type == "FOR":
+            node = self.FOR()
+        elif self.current_token.type == "WHILE":
+            node = self.WHILE()
+        elif self.current_token.type == "DOWHILE":
+            node = self.dowhile()
+        elif self.current_token.type == "FUN":
+            node = self.fun()
+        elif self.current_token.type == "IF":
+            node = self.IF()
+        elif self.current_token.type == "SWITCH":
+            node = self.switch()
 
     def id(self):
         """id: ID ASSIGN expr"""
@@ -521,7 +595,7 @@ class Parser(object):
         elif token.type == INTEGER_CONST:
             begin = self.current_token
             self.eat(INTEGER_CONST)
-        if(!begin_empty):
+        if(not begin_empty):
             self.eat(COMMA)
         end = self.current_token
         self.eat(INTEGER_CONST)
@@ -536,7 +610,7 @@ class Parser(object):
         elif token.type == INTEGER_CONST:
             increment = self.current_token
             self.eat(INTEGER_CONST)
-        if(!increment_empty):
+        if(not increment_empty):
             self.eat(COLON)
         self.eat(INDENT)
         compound_statement = self.compound_statement()
@@ -569,6 +643,35 @@ class Parser(object):
         self.eat(UNINDENT)
 
         node = Dowhile(expr, compound_statement)
+
+        return node
+
+    def fun(self):
+        """fun: FUN ID LPAREN ((VAR|VAL) ID (COMMA)?)* RPAREN COLON INDENT compound_statement UNINDENT"""
+        self.eat("FUN")
+        func_name = self.eat(ID)
+        self.eat(LPAREN)
+        var_types = []
+        var_names = []
+        while True:
+            if self.current_token.type == "VAR":
+                var_types.append("VAR")
+                self.eat("VAR")
+            elif self.current_token.type == "VAL":
+                var_types.append("VAL")
+                self.eat("VAL")
+            var_names.append(self.eat(ID))
+            if(self.current_token.type == RPAREN):
+                self.eat(RPAREN)
+                break
+            self.eat(COMMA)
+
+        self.eat(COLON)
+        self.eat(INDENT)
+        compound_statement = self.compound_statement()
+        self.eat(UNINDENT)
+
+        node = Fun(func_name, var_types, var_names, compound_statement)
 
         return node
 
@@ -637,7 +740,7 @@ class Parser(object):
             elif(self.current_token.type == UNINDENT):
                 self.eat(UNINDENT)
 
-            if(!break_flag):
+            if(not break_flag):
                 self.eat(UNINDENT)
 
             i += 1
@@ -651,13 +754,213 @@ class Parser(object):
 
         return node
 
+    def expr(self):
+        """expr: level7(|| level7)*"""
+        node = self.level7()
+
+        while self.current_token == OR:
+            self.eat(OR)
+
+            node = BinOp(left=node, op=token, right=self.level7())
+
+        return node
+
+    def level7(self):
+        """level7: level6(&& level6)*"""
+        node = self.level6()
+
+        while self.current_token == AND:
+            self.eat(AND)
+
+            node = BinOp(left=node, op=token, right=self.level6())
+
+        return node
+
+    def level6(self):
+        """level6: level5((EQUAL|NOTEQUAL) level5)*"""
+        node = self.level5()
+
+        while self.current_token in (EQUAL, NOTEQUAL):
+            token = self.current_token
+
+            if token.type == EQUAL:
+                self.eat(EQUAL)
+            elif token.type == NOTEQUAL:
+                self.eat(NOTEQUAL)
+
+            node = BinOp(left=node, op=token, right=self.level5())
+
+        return node
+
+    def level5(self):
+        """level5: level4((LESS|LEQ|GREAT|GEQ) level4)*"""
+        node = self.level4()
+
+        while self.current_token in (LESS, LEQ, GREAT, GEQ):
+            token = self.current_token
+
+            if token.type == LESS:
+                self.eat(LESS)
+            elif token.type == LEQ:
+                self.eat(LEQ)
+            elif token.type == GREAT:
+                self.eat(GREAT)
+            elif token.type == GEQ:
+                self.eat(GEQ)
+
+            node = BinOp(left=node, op=token, right=self.level4())
+
+        return node
+
+    def level4(self):
+        """level4: level3((PLUS|MINUS) level3)*"""
+        node = self.level3()
+
+        while self.current_token in (PLUS, MINUS):
+            token = self.current_token
+
+            if token.type == PLUS:
+                self.eat(PLUS)
+            elif token.type == MINUS:
+                self.eat(MINUS)
+
+            node = BinOp(left=node, op=token, right=self.level3())
+
+        return node
+
+    def level3(self):
+        """level3: level2((MUL|FDIV|IDIV|MODULO) level2)*"""
+        node = self.level2()
+
+        while self.current_token in (MUL, FLOAT_DIV, INTEGER_DIV):
+            token = self.current_token
+
+            if token.type == MUL:
+                self.eat(MUL)
+            elif token.type == FDIV:
+                self.eat(FDIV)
+            elif token.type == IDIV:
+                self.eat(IDIV)
+            elif token.type == MODULO:
+                self.eat(MODULO)
+
+            node = BinaryOp(left=node, op=token, right=self.level2())
+
+        return node
+
+    def level2(self):
+        """level2: level1(POWER level1)*"""
+        node = self.level1()
+
+        while self.current_token == POWER:
+            self.eat(POWER)
+
+            node = BinOp(left=node, op=self.current_token, right=self.level1())
+
+        return node
+
+    def level1(self):
+        """"level1: factor((INC|DEC|NOT) factor)*"""
+        node = self.factor()
+
+        while self.current_token in (INC, DEC, NOT):
+            token = self.current_token
+
+            if token.type == INC:
+                self.eat(INC)
+            elif token.type == DEC:
+                self.eat(DEC)
+            elif token.type == NOT:
+                self.eat(NOT)
+
+            node = BinOp(left=node, op=token, right=self.factor())
+
+        return node
+
+    def factor(self):
+        """factor: PLUS factor|MINUS factor|INTEGER_CONST|FLOAT_CONST|STRING_CONST|LPAREN expr RPAREN"""
+        token = self.current_token
+
+        if token.type == PLUS:
+            self.eat(PLUS)
+            node = UnaryOp(token, self.factor())
+            return node
+        elif token.type == MINUS:
+            self.eat(MINUS)
+            node = UnaryOp(token, self.factor())
+            return node
+        elif token.type == INTEGER_CONST:
+            self.eat(INTEGER_CONST)
+            return Num(token)
+        elif token.type == FLOAT_CONST:
+            self.eat(FLOAT_CONST)
+            return Num(token)
+        elif token.type == LPAREN:
+            self.eat(LPAREN)
+            node = self.expr()
+            self.eat(RPAREN)
+            return note
+
+    def parse(self):
+
+        node = self.program()
+        if self.current_token.type != EOF:
+            self.error()
+
+        return node
+
+###############################################################################
+#                                                                             #
+#  INTERPRETER                                                                #
+#                                                                             #
+###############################################################################
+
+class NodeVisitor(object):
+    def visit(self, node):
+        method_name = "visit_" + type(node).__name__
+        visitor = getattr(self, method_name, self.generic_visit)
+        return visitor(node)
+
+    def generic_visit(self, node):
+        raise Exception('No visit_{} method'.format(type(node).__name__))
+
+class Interpreter(NodeVisitor):
+    def __init__(self, parser):
+        self.parser = parser
+        import collections
+        self.GLOBAL_SCOPE = collections.OrderedDict()
+
+    def visit_Program(self, node):
+        self.visit(node.block)
+
+    def visit_Block(self, node):
+        if node.stype == "single":
+            self.visit(node.show)
+        elif node.stype == "compound":
+            self.visit(node.compound_statement)
+
+    def visit_show(self, node):
+        self.visit(node.expr)
+
+    def visit_expr(self, node):
+        return node.value
+
+    def interpret(self):
+        tree = self.parser.parse()
+        if tree is None:
+            return ''
+        return self.visit(tree)
+
 import sys
 
 text = open(sys.argv[1], "r").read()
 
 text = text.replace("    ", "~")
-text = text.replace("\n", "^")
+text = text.replace("\n", " ^ ")
+text = "BEGIN " + text + " END"
 
 lex = Lexer(text)
-
-lex.lexer()
+parser = Parser(lex)
+print(parser.parse())
+interpreter = Interpreter(parser)
+print(interpreter.interpret())

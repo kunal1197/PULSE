@@ -1,2 +1,1 @@
-for var in ,10,:
-  show var
+show 10
