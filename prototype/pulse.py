@@ -359,16 +359,23 @@ class Program(AST):
         )
 
 class Block(AST):
-    def __init__(self, stype, single_line = None, compound_statement = None):
-        self.single_line = single_line
-        self.compound_statement = compound_statement
+    def __init__(self):
+        self.statements = []
+        self.stypes = []
+    def __str__(self):
+        return "Block({statements}, {stypes})".format(
+            statements = self.statements,
+            stypes = self.stypes
+        )
+
+class Single(AST):
+    def __init__(self, statement, stype):
+        self.statement = statement
         self.stype = stype
     def __str__(self):
-        return "Block({single_line}, {compound_statement}, {stype})".format(
-            single_statement = self.single_line,
-            compound_statement = self.compound_statement,
-            stype = self.stype,
-
+        return "Single({statement}, {stype})".format(
+            statement = self.statement,
+            stype = self.stype
         )
 
 class Show(AST):
@@ -481,12 +488,8 @@ class Parser(object):
 
     def eat(self, token_type):
         if self.current_token.type == token_type:
-            print(token_type)
-            print(self.current_token.type)
             self.current_token = self.lexer.get_next_token()
         else:
-            print(token_type)
-            print(self.current_token.type)
             self.error()
 
     def program(self):
@@ -499,24 +502,33 @@ class Parser(object):
         return program_node
 
     def block(self):
-        """block: single_line | compound_statement"""
-        if self.current_token.type == ID or self.current_token.type == VAL or self.current_token.type == VAL or self.current_token.type == "SHOW":
-            node = Block("single", self.single_line(), None)
-        else:
-            node = Block("compound", None, self.compound_statement())
+        """block: (single_line | compound_statement)+"""
+
+        node = Block()
+
+        while True:
+            token_type = self.current_token.type
+            if token_type == ID or token_type == VAL or token_type == VAL or token_type == "SHOW":
+                node.statements.append(self.single_line())
+                node.stypes.append("singles")
+            elif token_type == "FOR" or token_type == "WHILE" or token_type == "DOWHILE" or token_type == "IF" or token_type == "SWITCH" or token_type == "FUN":
+                node.statements.append(self.compound_statement())
+                node.stypes.append("compound")
+            else:
+                break
 
         return node
 
     def single_line(self):
-        """single_line: "ID | VAR | VAL | SHOW"""
+        """single_line: "ID | VAR | VAL | SHOW | single_line | compound_statement"""
         if self.current_token.type == ID:
-            node = self.id()
+            node = Single(self.id(), "id")
         elif self.current_token.type == VAR:
-            node = self.var()
+            node = Single(self.var(), "var")
         elif self.current_token.type == VAL:
-            node = self.val()
+            node = Single(self.val(), "val")
         elif self.current_token.type == "SHOW":
-            node = self.show()
+            node = Single(self.show(), "show")
 
         return node
 
@@ -916,8 +928,10 @@ class Parser(object):
 ###############################################################################
 
 class NodeVisitor(object):
-    def visit(self, node):
+    def visit(self, node, custom_name=""):
         method_name = "visit_" + type(node).__name__
+        if(custom_name != ""):
+            method_name = custom_name
         visitor = getattr(self, method_name, self.generic_visit)
         return visitor(node)
 
@@ -934,22 +948,28 @@ class Interpreter(NodeVisitor):
         self.visit(node.block)
 
     def visit_Block(self, node):
-        if node.stype == "single":
-            self.visit(node.show)
-        elif node.stype == "compound":
-            self.visit(node.compound_statement)
+        for (statement, stype) in zip(node.statements, node.stypes):
+            if stype == "singles":
+                self.visit(statement, "visit_Single")
 
-    def visit_show(self, node):
+    def visit_Single(self, node):
+        if(node.stype == "show"):
+            self.visit(node.statement, "visit_Show")
+
+    def visit_Show(self, node):
         self.visit(node.expr)
 
+    def visit_Num(self, node):
+        print(node.token.value)
+
     def visit_expr(self, node):
-        return node.value
+        print("Hello")
 
     def interpret(self):
         tree = self.parser.parse()
         if tree is None:
             return ''
-        return self.visit(tree)
+        self.visit(tree)
 
 import sys
 
@@ -961,6 +981,6 @@ text = "BEGIN " + text + " END"
 
 lex = Lexer(text)
 parser = Parser(lex)
-print(parser.parse())
+# print(parser.parse())
 interpreter = Interpreter(parser)
-print(interpreter.interpret())
+interpreter.interpret()
