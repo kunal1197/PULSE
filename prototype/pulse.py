@@ -11,6 +11,5 @@ text = "BEGIN " + text + " END"
 
 lex = Lexer(text)
 parser = Parser(lex)
-# print(parser.parse())
 interpreter = Interpreter(parser)
 interpreter.interpret()
