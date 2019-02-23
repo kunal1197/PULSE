@@ -293,7 +293,7 @@ class Parser(object):
         """expr: level7(|| level7)*"""
         node = self.level7()
 
-        while self.current_token == OR:
+        while self.current_token.type == OR:
             self.eat(OR)
 
             node = BinOp(left=node, op=token, right=self.level7())
@@ -304,7 +304,7 @@ class Parser(object):
         """level7: level6(&& level6)*"""
         node = self.level6()
 
-        while self.current_token == AND:
+        while self.current_token.type == AND:
             self.eat(AND)
 
             node = BinOp(left=node, op=token, right=self.level6())
@@ -315,7 +315,7 @@ class Parser(object):
         """level6: level5((EQUAL|NOTEQUAL) level5)*"""
         node = self.level5()
 
-        while self.current_token in (EQUAL, NOTEQUAL):
+        while self.current_token.type in (EQUAL, NOTEQUAL):
             token = self.current_token
 
             if token.type == EQUAL:
@@ -331,7 +331,7 @@ class Parser(object):
         """level5: level4((LESS|LEQ|GREAT|GEQ) level4)*"""
         node = self.level4()
 
-        while self.current_token in (LESS, LEQ, GREAT, GEQ):
+        while self.current_token.type in (LESS, LEQ, GREAT, GEQ):
             token = self.current_token
 
             if token.type == LESS:
@@ -351,9 +351,8 @@ class Parser(object):
         """level4: level3((PLUS|MINUS) level3)*"""
         node = self.level3()
 
-        while self.current_token in (PLUS, MINUS):
+        while self.current_token.type in (PLUS, MINUS):
             token = self.current_token
-
             if token.type == PLUS:
                 self.eat(PLUS)
             elif token.type == MINUS:
@@ -367,7 +366,7 @@ class Parser(object):
         """level3: level2((MUL|FDIV|IDIV|MODULO) level2)*"""
         node = self.level2()
 
-        while self.current_token in (MUL, FLOAT_DIV, INTEGER_DIV):
+        while self.current_token.type in (MUL, FLOAT_DIV, INTEGER_DIV):
             token = self.current_token
 
             if token.type == MUL:
@@ -387,7 +386,7 @@ class Parser(object):
         """level2: level1(POWER level1)*"""
         node = self.level1()
 
-        while self.current_token == POWER:
+        while self.current_token.type == POWER:
             self.eat(POWER)
 
             node = BinOp(left=node, op=self.current_token, right=self.level1())
@@ -398,7 +397,7 @@ class Parser(object):
         """"level1: factor((INC|DEC|NOT) factor)*"""
         node = self.factor()
 
-        while self.current_token in (INC, DEC, NOT):
+        while self.current_token.type in (INC, DEC, NOT):
             token = self.current_token
 
             if token.type == INC:

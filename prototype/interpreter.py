@@ -1,3 +1,5 @@
+from constants import *
+
 class NodeVisitor(object):
     def visit(self, node, custom_name=""):
         method_name = "visit_" + type(node).__name__
@@ -34,7 +36,11 @@ class Interpreter(NodeVisitor):
         print(node.token.value)
 
     def visit_expr(self, node):
-        print("Hello")
+        print(node)
+
+    def visit_BinOp(self, node):
+        if node.op.type == PLUS:
+            
 
     def interpret(self):
         tree = self.parser.parse()
