@@ -27,5 +27,5 @@ Steps to run program:-
 1) Navigate to PULSE folder and use the following command:
 
 ```console
-User@Programmer:~$ ./bin/pulsepp <filename>.pul
+User@Programmer:~$ ./bin/pulsepp hello.pul
 ```
