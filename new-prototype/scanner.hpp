@@ -8,6 +8,7 @@
 
 using namespace std;
 
+using namespace token;
 
 class Scanner {
 public:

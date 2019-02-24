@@ -2,6 +2,8 @@
 
 using namespace std;
 
+using namespace token;
+
 class RuntimeError {
 public:
    Token token;

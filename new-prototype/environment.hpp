@@ -4,6 +4,8 @@
 
 #include "runtimeerror.hpp"
 
+using namespace token;
+
 class Environment {
 public:
   Environment *enclosing;

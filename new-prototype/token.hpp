@@ -7,26 +7,30 @@
 
 using namespace std;
 
-class Token {
-public:
-  TokenType type;
-  string lexeme;
-  boost::any literal;
-  int line;
+using namespace tokentype;
 
-  Token() {}
+namespace token {
+  class Token {
+  public:
+    TokenType type;
+    string lexeme;
+    boost::any literal;
+    int line;
 
-  Token(TokenType type, std::string lexeme, boost::any literal, int line) {
-    this->type = type;
-    this->lexeme = lexeme;
-    this->literal = literal;
-    this->line = line;
-  }
+    Token() {}
 
-  template <typename T>
-  std::string to_string(const T& object) {
-    std::ostringstream ss;
-    ss << object;
-    return ss.str();
-  }
-};
+    Token(TokenType type, std::string lexeme, boost::any literal, int line) {
+      this->type = type;
+      this->lexeme = lexeme;
+      this->literal = literal;
+      this->line = line;
+    }
+
+    template <typename T>
+    std::string to_string(const T& object) {
+      std::ostringstream ss;
+      ss << object;
+      return ss.str();
+    }
+  };
+}
