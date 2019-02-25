@@ -47,10 +47,15 @@ void Pulse::run_prompt()
 
     while (true)
     {
+        std::cout<<"Pulse> ";
         had_error = false; // reset error status
         getline(std::cin, curr_line);
 
-        std::cout << "> ";
+        if(curr_line == "exit();") {
+          break;
+        }
+
+        std::cout << "Pulse out:- ";
         run(curr_line);
         std::cout << std::endl;
     }
