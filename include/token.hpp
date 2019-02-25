@@ -38,6 +38,7 @@ enum TokenType
     AND,
     CLASS,
     ELSE,
+    ELSEIF,
     FALSE,
     FUN,
     LAMBDA,

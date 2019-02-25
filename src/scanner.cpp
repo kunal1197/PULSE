@@ -10,6 +10,7 @@ const std::map<std::string, TokenType> Scanner::keywords = {
     {"and", AND},
     {"class", CLASS},
     {"else", ELSE},
+    {"elseif", ELSEIF},
     {"false", FALSE},
     {"for", FOR},
     {"fun", FUN},

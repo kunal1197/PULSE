@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <vector>
 
 #include "return.hpp"
 #include "interpreter.hpp"
@@ -196,6 +197,13 @@ void Interpreter::visit(const IfStmt *stmt)
     if (is_truthy(*evaluate(*stmt->condition)))
     {
         execute(stmt->then_branch);
+    }
+    else if(stmt->elseif_conditions.size() > 0) {
+        for(int i=0; i<stmt->elseif_conditions.size(); i++) {
+          if(is_truthy(*evaluate(*stmt->elseif_conditions[i]))) {
+            execute(stmt->elseif_branches[i]);
+          }
+        }
     }
     else if (stmt->else_branch)
     {

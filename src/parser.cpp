@@ -1,5 +1,6 @@
 #include <memory>
 #include <vector>
+#include <iostream>
 
 #include "parser.hpp"
 #include "pulse.hpp"
@@ -140,9 +141,24 @@ Stmt *Parser::if_statement()
     consume(RIGHT_PAREN, "Expect ')' after if condition.");
 
     Stmt *then_branch = statement();
+
+    vector<Stmt*> elseif_branches;
+    vector<Expr*> elseif_conditions;
+
+    while(match({ELSEIF})) {
+      consume(LEFT_PAREN, "Expect '(' after elseif.");
+      Expr *elseif_condition = expression();
+      consume(RIGHT_PAREN, "Expect ')' after elseif condition.");
+
+      Stmt *elseif_branch = statement();
+
+      elseif_conditions.push_back(elseif_condition);
+      elseif_branches.push_back(elseif_branch);
+    }
+
     Stmt *else_branch = match({ELSE}) ? statement() : nullptr;
 
-    return new IfStmt(condition, then_branch, else_branch);
+    return new IfStmt(condition, then_branch, elseif_conditions, elseif_branches, else_branch);
 }
 
 Stmt *Parser::while_statement()

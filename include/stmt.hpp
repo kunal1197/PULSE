@@ -78,9 +78,11 @@ class BlockStmt : public Stmt
 class IfStmt : public Stmt
 {
   public:
-    explicit IfStmt(Expr *condition, Stmt *then_branch, Stmt *else_branch)
+    explicit IfStmt(Expr *condition, Stmt *then_branch, std::vector<Expr*> elseif_conditions, std::vector<Stmt*> elseif_branches, Stmt *else_branch)
         : condition(condition),
           then_branch(then_branch),
+          elseif_conditions(elseif_conditions),
+          elseif_branches(elseif_branches),
           else_branch(else_branch) {}
 
     virtual void accept(StmtVisitor *visitor) const
@@ -90,6 +92,8 @@ class IfStmt : public Stmt
 
     const Expr *condition;
     const Stmt *then_branch;
+    const std::vector<Expr*> elseif_conditions;
+    const std::vector<Stmt*> elseif_branches;
     const Stmt *else_branch;
 };
 
