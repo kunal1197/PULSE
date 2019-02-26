@@ -85,6 +85,8 @@ Stmt *Parser::statement()
 {
     if (match({IF}))
         return if_statement();
+    if (match({BREAK}))
+        return break_statement();
     if (match({PRINT}))
         return print_statement();
     if (match({RETURN}))
@@ -104,6 +106,14 @@ Stmt *Parser::print_statement()
     Expr *value = expression();
     consume(SEMICOLON, "Expect ';' after value.");
     return new PrintStmt(value);
+}
+
+Stmt *Parser::break_statement() {
+    if(Parser::loopDepth == 0) {
+      error(previous(), "Must be inside a loop to use 'break'.");
+    }
+    consume(SEMICOLON, "Expect ';' after value.");
+    return new BreakStmt();
 }
 
 Stmt *Parser::return_statement()
@@ -163,6 +173,7 @@ Stmt *Parser::if_statement()
 
 Stmt *Parser::while_statement()
 {
+    Parser::loopDepth++;
     consume(LEFT_PAREN, "Expect '(' after 'while'.");
     Expr *condition = expression();
     consume(RIGHT_PAREN, "Expect ')' after condition.");
@@ -177,6 +188,7 @@ Stmt *Parser::while_statement()
  */
 Stmt *Parser::for_statement()
 {
+    Parser::loopDepth++;
     consume(LEFT_PAREN, "Expect '(' after 'for'.");
 
     Stmt *initializer = nullptr;

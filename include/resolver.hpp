@@ -56,6 +56,7 @@ class Resolver : public ExprVisitor<void>, public StmtVisitor
     void visit(const Lambda *expr);
 
     void visit(const BlockStmt *);
+    void visit(const BreakStmt *);
     void visit(const ExprStmt *);
     void visit(const PrintStmt *);
     void visit(const VarStmt *);

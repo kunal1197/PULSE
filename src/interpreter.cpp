@@ -9,6 +9,7 @@
 #include "runtime_err.hpp"
 #include "expr.hpp"
 #include "pulse.hpp"
+#include "break_exception.hpp"
 
 using std::shared_ptr;
 
@@ -147,6 +148,10 @@ void Interpreter::visit(const BlockStmt *stmt)
     environment = previous;
 }
 
+void Interpreter::visit(const BreakStmt *stmt) {
+  throw new BreakException();
+}
+
 void Interpreter::visit(const PrintStmt *stmt)
 {
     shared_ptr<InterpreterResult> value = evaluate(*(stmt->expression));
@@ -171,9 +176,13 @@ void Interpreter::visit(const ReturnStmt *stmt)
 
 void Interpreter::visit(const WhileStmt *stmt)
 {
-    while (is_truthy(*evaluate(*stmt->condition)))
-    {
-        execute(stmt->body);
+    try {
+      while (is_truthy(*evaluate(*stmt->condition)))
+      {
+          execute(stmt->body);
+      }
+    } catch(...) {
+      std::cout<<"";
     }
 }
 

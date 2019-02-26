@@ -28,6 +28,11 @@ void Resolver::visit(const BlockStmt *stmt)
     end_scope();
 }
 
+void Resolver::visit(const BreakStmt *stmt)
+{
+
+}
+
 void Resolver::visit(const VarStmt *stmt)
 {
     declare(stmt->name);

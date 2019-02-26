@@ -45,6 +45,18 @@ class PrintStmt : public Stmt
     const Expr *expression = nullptr;
 };
 
+class BreakStmt : public Stmt
+{
+  public:
+    explicit BreakStmt() {}
+
+    virtual void accept(StmtVisitor *visitor) const
+    {
+        visitor->visit(this);
+    }
+
+};
+
 class VarStmt : public Stmt
 {
   public:

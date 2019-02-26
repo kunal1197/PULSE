@@ -53,6 +53,11 @@ void AstDeleter::visit(const BlockStmt *stmt)
     stmts_to_delete.insert(static_cast<const Stmt *>(stmt));
 }
 
+void AstDeleter::visit(const BreakStmt *stmt)
+{
+    stmts_to_delete.insert(static_cast<const Stmt *>(stmt));
+}
+
 void AstDeleter::visit(const PrintStmt *stmt)
 {
     stmt->expression->accept(this);

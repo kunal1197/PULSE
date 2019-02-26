@@ -11,6 +11,7 @@ class StmtVisitor {
 public:
     virtual ~StmtVisitor() {};
     virtual void visit(const BlockStmt*) = 0;
+    virtual void visit(const BreakStmt*) = 0;
     virtual void visit(const ExprStmt*) = 0;
     virtual void visit(const PrintStmt*) = 0;
     virtual void visit(const VarStmt*) = 0;

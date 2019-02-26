@@ -20,6 +20,7 @@ class Lambda;
 class Stmt;
 class ExprStmt;
 class BlockStmt;
+class BreakStmt;
 class PrintStmt;
 class VarStmt;
 class ClassStmt;
@@ -28,4 +29,4 @@ class WhileStmt;
 class FuncStmt;
 class ReturnStmt;
 
-#endif 
+#endif

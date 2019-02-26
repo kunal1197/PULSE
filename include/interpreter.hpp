@@ -42,6 +42,7 @@ class Interpreter : public ExprVisitor<shared_ptr<InterpreterResult>>,
     shared_ptr<InterpreterResult> visit(const Lambda *expr);
 
     void visit(const BlockStmt *);
+    void visit(const BreakStmt *);
     void visit(const ExprStmt *);
     void visit(const PrintStmt *);
     void visit(const VarStmt *);
@@ -77,4 +78,4 @@ class Interpreter : public ExprVisitor<shared_ptr<InterpreterResult>>,
                                 const InterpreterResult &right);
 };
 
-#endif 
+#endif

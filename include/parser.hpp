@@ -19,8 +19,13 @@ class ParseErr : std::runtime_error
 class Parser
 {
   public:
+    int loopDepth = 0;
     Parser(const std::vector<Token> &tokens) : tokens(tokens) {}
     std::vector<Stmt *> parse();
+
+    ~Parser() {
+      loopDepth--;
+    }
 
   private:
     int current = 0; // next token to be used
@@ -53,6 +58,7 @@ class Parser
     Stmt *var_declaration();
     Stmt *class_declaration();
     Stmt *statement();
+    Stmt *break_statement();
     Stmt *print_statement();
     Stmt *block_statement();
     Stmt *expression_statement();
@@ -64,6 +70,7 @@ class Parser
 
     ParseErr error(Token token, std::string msg);
     void synchronize();
+
 };
 
-#endif 
+#endif

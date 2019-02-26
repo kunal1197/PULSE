@@ -33,6 +33,7 @@ class AstDeleter : public ExprVisitor<void>,
     void visit(const Lambda *expr);
 
     void visit(const BlockStmt *);
+    void visit(const BreakStmt *);
     void visit(const ExprStmt *);
     void visit(const PrintStmt *);
     void visit(const VarStmt *);
@@ -43,4 +44,4 @@ class AstDeleter : public ExprVisitor<void>,
     void visit(const ReturnStmt *);
 };
 
-#endif 
+#endif
